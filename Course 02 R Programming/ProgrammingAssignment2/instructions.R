@@ -29,14 +29,36 @@
 
 
 makeVector <- function(x = numeric()) {
+  
+  # Initialize m which contains the mean
   m <- NULL
+  
+  # Function to set value of a vector. "<<-" causes a search to be made through
+  # parent environments for an existing definition of the variable being
+  # assigned. If such a variable is found (and its binding is not locked) then
+  # its value is redefined, otherwise assignment takes place in the global
+  # environment.
   set <- function(y) {
     x <<- y
     m <<- NULL
   }
+  
+  # Function to get value of a vector
+  # Since x is not in this function it will look in the parent.frame
   get <- function() x
+  
+  # Function to set the mean<<-" causes a search to be made through
+  # parent environments for an existing definition of the variable being
+  # assigned. If such a variable is found (and its binding is not locked) then
+  # its value is redefined, otherwise assignment takes place in the global
+  # environment.
   setmean <- function(mean) m <<- mean
+  
+  # Function to get the mean
+  # Since m is not in this function it will look in the parent.frame
   getmean <- function() m
+  
+  # Output when called, appears to be useless
   list(set = set, get = get,
        setmean = setmean,
        getmean = getmean)
@@ -50,13 +72,26 @@ makeVector <- function(x = numeric()) {
 # function.
 
 cachemean <- function(x, ...) {
+  
+  # Get the value of mean of the vector
   m <- x$getmean()
+  
+  # If mean was previously calculated it returns it directly
+  # No additional computation
   if (!is.null(m)) {
     message("getting cached data")
-    return(m)
+    return(m) # This will end all further execution of code
   }
+  
+  # Get the original data put into makeVector()
   data <- x$get()
+  
+  # Calculate the mean of data with potential arguments
   m <- mean(data, ...)
+  
+  # Put calculated mean into makeVector()
   x$setmean(m)
+  
+  # Output of the mean
   m
 }
