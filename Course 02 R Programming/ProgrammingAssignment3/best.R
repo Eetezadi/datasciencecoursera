@@ -49,7 +49,7 @@ best <- function(state, outcome){
                                  & !(data[, outcomes_col] == "Not Available"),
                         select = c(2, outcomes_col))
   # Select hospital(s) with minimum death rates 
-  hospitals <- death_rates[,1][which(death_rates[,2] == min(death_rates[,2]))]
+  hospitals <- death_rates[,1][which(death_rates[,2] == min(as.numeric(death_rates[,2])))]
   
   # Return hospital that comes first in alphabet
   alpha_id <- sort.list(hospitals)
