@@ -42,12 +42,11 @@ best <- function(state, outcome){
   # Determine column number for outcome
   outcomes_col <- outcome_cols[match(outcome, valid_outcomes)]
   
-  # Select hopital.name and death rate for state
-  # Exclude "Not Available" data
-  death_rates <- subset(data,
-                        subset = data[,7] == state
-                                 & !(data[, outcomes_col] == "Not Available"),
-                        select = c(2, outcomes_col))
+  # Select only rows with state and no "Not Available"
+  rcond = data[,7] == state & !(data[, outcomes_col] == "Not Available")
+  # Extract hospital.name and outcomes column.
+  death_rates <- data[rcond, c(2, outcomes_col)]
+  
   # Select hospital(s) with minimum death rates 
   hospitals <- death_rates[,1][which(death_rates[,2] == min(as.numeric(death_rates[,2])))]
   
