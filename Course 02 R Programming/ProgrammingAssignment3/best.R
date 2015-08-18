@@ -51,6 +51,5 @@ best <- function(state, outcome){
   hospitals <- death_rates[,1][which(death_rates[,2] == min(as.numeric(death_rates[,2])))]
   
   # Return hospital that comes first in alphabet
-  alpha_id <- sort.list(hospitals)
-  return(hospitals[alpha_id[1]])
+  return(sort(hospitals))
 }
