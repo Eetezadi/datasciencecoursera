@@ -32,7 +32,7 @@ best <- function(state, outcome){
   
   # Create vectors with valid states, valid outcomes and cols
   valid_states <- levels(as.factor(data[,7]))
-  valid_outcomes <- c("heart attack", "heart failure","pneumonia")
+  valid_outcomes <- c("heart attack", "heart failure", "pneumonia")
   outcome_cols = c(11, 17, 23); # from manual in order
   
   # Throw if not valid state
@@ -48,7 +48,8 @@ best <- function(state, outcome){
   death_rates <- data[rcond, c(2, outcomes_col)]
   
   # Select hospital(s) with minimum death rates 
-  hospitals <- death_rates[,1][which(death_rates[,2] == min(as.numeric(death_rates[,2])))]
+  sel <- which(as.numeric(death_rates[,2]) == min(as.numeric(death_rates[,2])))
+  hospitals <- death_rates[,1][sel]
   
   # Return hospital that comes first in alphabet
   return(sort(hospitals))
