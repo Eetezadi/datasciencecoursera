@@ -47,7 +47,7 @@ rankhospital <- function(state, outcome, num = "best"){
   outcomes_col <- outcome_cols[match(outcome, valid_outcomes)]
   
   # Select only rows with state and no "Not Available"
-  rcond = data[,7] == state & !(data[, outcomes_col] == "Not Available")
+  rcond <- data[,7] == state & !(data[, outcomes_col] == "Not Available")
   # Extract hospital.name and outcomes column.
   death_rates <- data[rcond, c(2, outcomes_col)]
   
