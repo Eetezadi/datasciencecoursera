@@ -51,8 +51,9 @@ best <- function(state, outcome){
                              outcome = outcome_col,
                              states = "State") %>% 
                       filter(states == state & outcome != "Not Available") %>%
-                      mutate(outcome = as.numeric(outcome)) %>% arrange(outcome, hospital)
+                      mutate(outcome = as.numeric(outcome)) %>%
+                      arrange(outcome, hospital)
   
   # First element is best hospital
-  mort_df$hospital[1]
+  return(mort_df$hospital[1])
 }
