@@ -38,18 +38,25 @@ rankhospital <- function(state, outcome, num = "best"){
   
   # Create vectors with valid states, valid outcomes and cols
   o_valid <- data.frame(input = c("heart attack", "heart failure", "pneumonia"),
-                        colno = c(11, 17, 23),
                         colname = c("Heart.Attack", "Heart.Failure", "Pneumonia"))
-  s_valid <- data %>% distinct(State) %>% select(State)
+  s_valid <- data %>% select(state = State) %>% 
+                      arrange(state) %>%
+                      distinct(state)
   
   # Throw if not valid state or valid outcome
-  if (!(state %in% s_valid$State)) stop("invalid state")
+  if (!(state %in% s_valid$state)) stop("invalid state")
   if (!(outcome %in% o_valid$input)) stop("invalid outcome")
   
   
   # Creating the right column name based on outcome
   outcome_col = paste0("Hospital.30.Day.Death..Mortality..Rates.from.",
                        o_valid$colname[which(o_valid$input == outcome)])
+  
+  # Write filter based on num
+  # n() selects the last row in dplyr
+  if (num == "best") num <- 1
+  else if (num == "worst") num <- "n()"
+  num_filter <- paste0("row_number() == ", num)
   
   # dplyr pipes action: Select and rename columns, filter for state and invalid 
   # values, convert to number and finally arrange by outcome and break ties with
@@ -59,15 +66,11 @@ rankhospital <- function(state, outcome, num = "best"){
                               states = "State") %>% 
                       filter(states == state & outcome != "Not Available") %>%
                       mutate(outcome = as.numeric(outcome)) %>%
-                      arrange(outcome, hospital)
+                      arrange(outcome, hospital) %>%
+                      filter_(num_filter)
 
   
-  # Rewrite num
-  if (num == "best") num <- 1
-  else if (num == "worst") num <- length(mort_df$hospital)
-  
-
   # Return hospital according to ranking if ranking exists
-  if (is.na(mort_df$hospital[num])) return("NA")
-  else return(mort_df$hospital[num])
+  if (length(mort_df$hospital) == 0) return("NA")
+  else return(mort_df$hospital)
 }

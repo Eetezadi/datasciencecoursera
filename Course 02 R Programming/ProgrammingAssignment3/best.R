@@ -38,7 +38,7 @@ best <- function(state, outcome){
                       distinct(state)
 
   # Throw if not valid state or valid outcome
-  if (!(state %in% s_valid$State)) stop("invalid state")
+  if (!(state %in% s_valid$state)) stop("invalid state")
   if (!(outcome %in% o_valid$input)) stop("invalid outcome")
   
   # Creating the right column name based on outcome

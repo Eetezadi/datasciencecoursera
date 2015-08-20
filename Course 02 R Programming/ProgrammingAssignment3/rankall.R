@@ -24,61 +24,57 @@
 # with the exact message “invalid outcome”.
 
 
-# Determines the best state for each outcome
+# Determines hospital for each state according to outcome and num
+# Dependencies: dplyr
 # Arguments:
-#   state: character: 2 Letter code for the state
 #   outcome: factor: heart attack”, “heart failure” or “pneumonia”
+#   num: integer, ranking of the hospital, "best" | "worst" also allowed
 
-rankall <- function(outcome, num = "best") {
+rankall <- function(outcome, num = "best"){
   
   # Read data into object
   data = read.csv("data/outcome-of-care-measures.csv", colClasses = "character")
   
-  # Create vectors with valid states, valid outcomes and cols
-  valid_outcomes <- c("heart attack", "heart failure", "pneumonia")
-  outcome_cols = c(11, 17, 23); # from manual in order
+  # Create vectors with valid outcomes and cols
+  o_valid <- data.frame(input = c("heart attack", "heart failure", "pneumonia"),
+                        colname = c("Heart.Attack", "Heart.Failure", "Pneumonia"))
   
   # Throw if not valid outcome
-  if (!(outcome %in% valid_outcomes)) stop("invalid outcome")
+  if (!(outcome %in% o_valid$input)) stop("invalid outcome")
   
-  # Determine column number for outcome
-  outcomes_col <- outcome_cols[match(outcome, valid_outcomes)]
+  # Create the right column name based on outcome
+  outcome_col <- paste0("Hospital.30.Day.Death..Mortality..Rates.from.",
+                       o_valid$colname[which(o_valid$input == outcome)])
   
-  # Extract hospital.name, outcomes column in a list by state
-  # Remove all rows with "Not Available"
-  #rcond <- data[, outcomes_col] != "Not Available"
+  # Write filter based on num
+  # n() selects the last row in dplyr
+  if (num == "best") num <- 1
+  else if (num == "worst") num <- "n()"
+  num_filter <- paste0("row_number() == ", num)
   
-  # Make a list for each state containing a data-frame
-  states_l <- split(data, data[,7])
+  
+  # dplyr pipes action: Select and rename columns, filter invalid values, group
+  # by state, convert outcome to number, arrange by outcome and break ties with 
+  # hospital name, filter for num and finally select hospital
+  mort_df <- data %>% select_(hospital = "Hospital.Name", 
+                              outcome = outcome_col,
+                              state = "State") %>%
+                      filter(outcome != "Not Available") %>%
+                      group_by(state) %>%
+                      mutate(outcome = as.numeric(outcome)) %>%
+                      arrange(outcome, hospital) %>%
+                      filter_(num_filter) %>% select(hospital)
+  
+  # The filter in the statement above will drop empty groups. Currently there is
+  # no way to prevent that (https://github.com/hadley/dplyr/issues/341).
+  # Therefore all a sorted list of all states will be extracted again
+  all_states_df <- data %>% select(state = State) %>% 
+                            arrange(state) %>%
+                            distinct(state)
 
-  best_hospital <- character(length(states_l))
-  for (i in seq_along(states_l)) {
-    
-    # Remove rows which dont contain data ("Not Available")
-    rcond <- states_l[[i]][, outcomes_col] != "Not Available"
-    # Extract hospital.name and outcomes column.
-    death_rates <- states_l[[i]][rcond, c(2, outcomes_col)]
-    
-    # Build vector with ranks based on outcome ASC, hospital name ASC
-    rank <- order(as.numeric(death_rates[, 2]), death_rates[, 1])
-    
-    # Rewrite num
-    no_hospitals <- length(death_rates[,1])
-    if (num == "best") nnum <- 1
-    else if (num == "worst") nnum <- as.numeric(no_hospitals)
-    else nnum <- num
-    
-    # Validate num for integer, length
-    if (class(nnum) != "numeric") stop("invalid num")
-    else if (nnum %% 1 != 0) stop("invalid num")
-    else if (nnum > no_hospitals | nnum < 1) best_hospital[i] <- "NA"
-    
-    
-    # Return best hospital that comes first in alphabet
-    if (is.na(death_rates[rank[nnum], 1])) best_hospital[i] <- "NA"
-    else best_hospital[i] <- death_rates[rank[nnum], 1]  
-  }
+  # Joins mortalities and states together. If there are no values for a state
+  # "NA" will be introduced
+  ranked_hospitals <- right_join(mort_df, all_states_df)
   
-  result <- data.frame(hospital = best_hospital, state = names(states_l))
-  return(result)
+  return(ranked_hospitals)
 }
