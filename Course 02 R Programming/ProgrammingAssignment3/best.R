@@ -32,9 +32,10 @@ best <- function(state, outcome){
   
   # Create vectors with valid states, valid outcomes and cols
   o_valid <- data.frame(input = c("heart attack", "heart failure", "pneumonia"),
-                        colno = c(11, 17, 23),
                         colname = c("Heart.Attack", "Heart.Failure", "Pneumonia"))
-  s_valid <- data %>% distinct(State) %>% select(State)
+  s_valid <- data %>% select(state = State) %>% 
+                      arrange(state) %>%
+                      distinct(state)
 
   # Throw if not valid state or valid outcome
   if (!(state %in% s_valid$State)) stop("invalid state")
@@ -45,15 +46,16 @@ best <- function(state, outcome){
                        o_valid$colname[which(o_valid$input == outcome)])
   
   # dplyr pipes action: Select and rename columns, filter for state and invalid 
-  # values, convert to number and finally arrange by outcome and break ties with
-  # hospital name
+  # values, convert to number, arrange by outcome and break ties with hospital
+  # name and finally select top value
   mort_df <- data %>% select_(hospital = "Hospital.Name", 
                              outcome = outcome_col,
                              states = "State") %>% 
                       filter(states == state & outcome != "Not Available") %>%
                       mutate(outcome = as.numeric(outcome)) %>%
-                      arrange(outcome, hospital)
+                      arrange(outcome, hospital) %>%
+                      slice(1)
   
   # First element is best hospital
-  return(mort_df$hospital[1])
+  return(mort_df$hospital)
 }
