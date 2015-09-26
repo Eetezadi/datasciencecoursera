@@ -1,0 +1,75 @@
+---
+title: "Coursera - Statistical Inference - Course Project"
+author: "Sina Eetezadi"
+date: "September 25, 2015"
+output: html_document
+---
+
+## The Effect of Vitamin C on Tooth Growth in Guinea Pigs
+
+### Data Overview
+The R dataset "ToothGrowth" reports the length of odontoblasts (cells responsible for tooth growth) in response to dosing of vitamin C (ascorbic acid) in 60 guinea pigs.
+
+The dataset has 60 rows and 3 columns. Each row is the data for one animal.
+```{r}
+data("ToothGrowth")
+dim(ToothGrowth)
+```
+
+
+Half of the animals received orange juice (OJ) and the other half received pure ascorbic acid powder (VC). Dose levels were split in 3 groups of the same size that each received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day).
+It is assumed that grouping was performed in a **randomized** fashion without selection and the data points are **independent** from each other.
+```{r, echo=FALSE}
+library(knitr)
+dat <- data.frame("Tooth Length" = ToothGrowth$len,
+                   "Delivery Vehicle" = ToothGrowth$supp,
+                   "Dose" = factor(ToothGrowth$dose) # indicates factors in summary()
+                   )
+knitr::kable(summary(dat))
+```
+
+
+### Effect of Delivery Vehicle on Tooth Growth
+The mean tooth growth for the orange juice group (ojs) is higher than for the vehicle control group (vcs). The question is, whether this difference is significant (two sided test). The null hypothesis is that the two groups are not different from each other.
+```{r}
+# Selecting animals by delivery vehicle
+ojs <- ToothGrowth$len[which(ToothGrowth$supp == "OJ")]
+vcs <- ToothGrowth$len[which(ToothGrowth$supp == "VC")]
+
+# summary of each groups
+mean(ojs)
+mean(vcs)
+```
+We assume that the data contains independent observations (not paired) and we don't know if the variance is similar. The test is performed at the standard 0.95 confidence interval.
+```{r}
+t.test(ojs, vcs, var.equal = FALSE, paired = FALSE)
+```
+Based on the test we accept the null hypothesis and conclude there is no difference in tooth growth whether vitamin C is given as orange juice or in powder form. We can see this since the confidence interval passes by 0, additionally the p-value is higher than 0.05.
+
+
+### Effect of Dosing Level on Tooth Growth
+We now want to investigate if the different doses of vitamin C lead to significantly different tooth growth. The null hypothesis is that they will not lead to different tooth growth.
+```{r}
+# Selecting animals by dosing regimen
+low <- ToothGrowth$len[which(ToothGrowth$dose == "0.5")]
+med <- ToothGrowth$len[which(ToothGrowth$dose == "1")]
+high <- ToothGrowth$len[which(ToothGrowth$dose == "2")]
+
+# summary of each group
+mean(low)
+mean(med)
+mean(high)
+```
+We see that the mean tooth growth is higher, the higher the dose. We will now compare the groups to see if the dose differences are significant. Or in other words, if higher doses lead to higher effect. We will use the same parameters and assumptions as outlined above.
+```{r}
+t.test(low, med, var.equal = FALSE, paired = FALSE)
+```
+The very low p-value clearly indicates that the tooth growth for the medium dose and the low dose is significantly different and we have to reject the null hypothesis.
+```{r}
+t.test(med, high, var.equal = FALSE, paired = FALSE)
+```
+In the same way, the tooth growth is also significantly different between the med and the high dose. Since low is different from med and med is different from high, we don't have to test the difference of low and high, because their means are even further apart.
+
+
+### Overall Conclusions
+Overall, we show based on the tooth growth data set that higher doses of vitamin C lead to more tooth growth, however it does not matter if the vitamin C is given as orange juice or as ascorbic acid powder.
